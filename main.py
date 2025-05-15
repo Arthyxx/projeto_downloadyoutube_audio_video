@@ -1,5 +1,7 @@
 import flet as ft
 import subprocess
+import sys
+import os
 
 class YouTubeDownloaderApp:
     def __init__(self, page: ft.Page):
@@ -18,6 +20,17 @@ class YouTubeDownloaderApp:
         self.select_folder_button = ft.ElevatedButton("Selecionar Pasta", on_click=self.selecionar_pasta)
         self.status_text = ft.Text("", color="blue")
         self.loader = ft.ProgressRing(visible=False)
+
+        # Caminhos para yt-dlp e ffmpeg dependendo se é exe ou script
+        if getattr(sys, 'frozen', False):
+            # Executando como exe PyInstaller
+            base_path = sys._MEIPASS  # pasta temporária onde PyInstaller extrai os arquivos
+        else:
+            # Executando como script .py
+            base_path = os.path.abspath(".")
+
+        self.yt_dlp_path = os.path.join(base_path, "yt-dlp.exe")
+        self.ffmpeg_path = os.path.join(base_path, "ffmpeg.exe")
 
         self.build()
 
@@ -72,17 +85,21 @@ class YouTubeDownloaderApp:
             self.page.update()
 
             subprocess.run([
-                "yt-dlp",
+                self.yt_dlp_path,
                 "-f", "best",
+                "--ffmpeg-location", self.ffmpeg_path,
                 "-o", f"{pasta_destino}/%(title)s.%(ext)s",
                 link
-            ])
+            ], check=True)
 
             self.status_text.value = "Vídeo baixado com sucesso!"
             self.status_text.color = "green"
 
+        except subprocess.CalledProcessError as ex:
+            self.status_text.value = f"Erro no download: {ex}"
+            self.status_text.color = "red"
         except Exception as ex:
-            self.status_text.value = f"Erro: {str(ex)}"
+            self.status_text.value = f"Erro inesperado: {ex}"
             self.status_text.color = "red"
 
         finally:
@@ -94,7 +111,7 @@ class YouTubeDownloaderApp:
     def baixar_audio(self, e):
         link = self.link_input.value.strip()
         if not link:
-            self.status_text.value = "Por favor, insira um link válido"
+            self.status_text.value = "Por favor, insira um link válido."
             self.status_text.color = "red"
             self.page.update()
             return
@@ -103,6 +120,7 @@ class YouTubeDownloaderApp:
         if not pasta_destino:
             self.status_text.value = "Por favor, selecione uma pasta destino."
             self.status_text.color = "red"
+            self.page.update()
             return
 
         try:
@@ -118,18 +136,22 @@ class YouTubeDownloaderApp:
             self.page.update()
 
             subprocess.run([
-                "yt-dlp",
+                self.yt_dlp_path,
                 "-x",
                 "--audio-format", "mp3",
+                "--ffmpeg-location", self.ffmpeg_path,
                 "-o", f"{pasta_destino}/%(title)s.%(ext)s",
                 link
-            ])
+            ], check=True)
 
             self.status_text.value = "Áudio baixado com sucesso!"
             self.status_text.color = "green"
 
+        except subprocess.CalledProcessError as ex:
+            self.status_text.value = f"Erro no download: {ex}"
+            self.status_text.color = "red"
         except Exception as ex:
-            self.status_text.value = f"Erro: {str(ex)}"
+            self.status_text.value = f"Erro inesperado: {ex}"
             self.status_text.color = "red"
 
         finally:
