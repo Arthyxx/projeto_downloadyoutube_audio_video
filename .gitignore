@@ -12,3 +12,5 @@ __pycache__/
 # Sistema operacional
 Thumbs.db
 .DS_Store
+dist/
+dist/
