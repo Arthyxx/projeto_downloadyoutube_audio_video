@@ -23,10 +23,8 @@ class YouTubeDownloaderApp:
 
         # Caminhos para yt-dlp e ffmpeg dependendo se é exe ou script
         if getattr(sys, 'frozen', False):
-            # Executando como exe PyInstaller
-            base_path = sys._MEIPASS  # pasta temporária onde PyInstaller extrai os arquivos
+            base_path = sys._MEIPASS
         else:
-            # Executando como script .py
             base_path = os.path.abspath(".")
 
         self.yt_dlp_path = os.path.join(base_path, "yt-dlp.exe")
